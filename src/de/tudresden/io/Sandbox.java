@@ -22,7 +22,7 @@ public class Sandbox {
 //			"echo: echo echo!echo echo!echo echo!echo echo!echo echo!e";
 		final String TEST2 = "{\"id\":5,\"type\":\"motion\",\"model\":\"RE200B\",\"properties\":{\"state\":{\"value\":\"true\",\"unit\":\"binary\"}}}";
 		Gson gson = new Gson();
-		gson.fromJson(TEST2, classOfT)
+//		gson.fromJson(TEST2, classOfT)
 		
 
 	}
