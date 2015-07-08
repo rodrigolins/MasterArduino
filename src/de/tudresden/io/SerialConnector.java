@@ -3,28 +3,20 @@ package de.tudresden.io;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 import de.tudresden.parsers.PropertyJsonParser;
 import gnu.io.CommPortIdentifier;
+import gnu.io.NoSuchPortException;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 
-public class ArduinoComm implements SerialPortEventListener {
+public class SerialConnector implements SerialPortEventListener {
 
 	SerialPort serialPort;
-
-	// The port we're normally going to use.
-	private static final String PORT_NAMES[] = { 
-		"/dev/tty.usbserial-A9007UX1",  // Mac OS X
-		"/dev/ttyACM0",  // Raspberry Pi  // This one is for linux actually.
-		"/dev/ttyUSB0",  // Linux
-		"COM3", // Windows
-	};
 	
+	private static final String SERIAL_PORT = "/dev/ttyACM0";
+
 	/**
 	* A BufferedReader which will be fed by a InputStreamReader 
 	* converting the bytes into characters 
@@ -45,36 +37,16 @@ public class ArduinoComm implements SerialPortEventListener {
 		// the next line is for Raspberry Pi and 
 		// gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
 		// System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
-		System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
+		System.setProperty("gnu.io.rxtx.SerialPorts", SERIAL_PORT);
 		
-		
-		Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
-		CommPortIdentifier portId = null;
-
-		//First, Find an instance of serial port as set in PORT_NAMES.
-		while (portEnum.hasMoreElements()) {
-			CommPortIdentifier elem = portEnum.nextElement();
-			System.out.println(elem.getName());
-			CommPortIdentifier currPortId = elem ;
-			for (String portName : PORT_NAMES) {
-				if (currPortId.getName().equals(portName)) {
-					portId = currPortId;
-					System.out.println(portId.getName());
-					break;
-				}
-			}
-		}
-
 		try {
-			// open serial port, and use class name for the appName.
-			serialPort = (SerialPort) portId.open(this.getClass().getName(),
-					TIME_OUT);
+			CommPortIdentifier port = CommPortIdentifier.getPortIdentifier(SERIAL_PORT);
+			
+			// open serial port.
+			serialPort = (SerialPort) port.open(this.getClass().getName(), TIME_OUT);
 			
 			// set port parameters
-			serialPort.setSerialPortParams(DATA_RATE,
-					SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1,
-					SerialPort.PARITY_NONE);
+			serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,	SerialPort.PARITY_NONE);
 
 			// open the streams
 			input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
@@ -83,7 +55,12 @@ public class ArduinoComm implements SerialPortEventListener {
 			// add event listeners
 			serialPort.addEventListener(this);
 			serialPort.notifyOnDataAvailable(true);
-		} catch (Exception e) {
+			
+		} catch (NoSuchPortException e1) {
+			System.err.println("Port not found");
+			e1.printStackTrace();
+		}
+		catch (Exception e) {
 			System.err.println(e.toString());
 		}
 	}
@@ -99,31 +76,21 @@ public class ArduinoComm implements SerialPortEventListener {
 		}
 	}
 	
-	private String doSomething(String value) {
-		List<String> values = new ArrayList<String>();
-		values.add(value);
-		System.out.println("Doing something");
-		return "";
-	}
-
 	/**
 	 * Handle an event on the serial port. Read the data and print it.
 	 */
-	public synchronized void serialEvent(SerialPortEvent oEvent) {
-		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+	public synchronized void serialEvent(SerialPortEvent event) {
+		if (event.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
 			try {
 				String inputLine = input.readLine();
-				System.out.println(PropertyJsonParser.parseLine(inputLine));
-//				String toSend = doSomething(inputLine);
-//				if("".equals(toSend)){
-//					output.write("echo echo! ".getBytes());
-//				}
 				System.out.println(inputLine);
+				System.out.println(PropertyJsonParser.parseLine(inputLine));
 			} catch (Exception e) {
 				System.err.println(e.toString());
 			}
 		}
 		// Ignore all the other eventTypes, but you should consider the other ones.
+		// TODO: Check all other eventTypes
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -133,6 +100,8 @@ public class ArduinoComm implements SerialPortEventListener {
 			public void run() {
 				// the following line will keep this app alive for 1000 seconds,
 				// waiting for events to occur and responding to them (printing incoming messages to console).
+				
+				// Remove the try/catch block to run indefinitely.
 				try {
 					Thread.sleep(1000000);
 				} catch (InterruptedException ie) {

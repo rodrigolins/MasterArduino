@@ -1,29 +1,63 @@
 package de.tudresden.io;
 
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.Gson;
 
+import de.tudresden.businessobjects.Property;
+import de.tudresden.businessobjects.Sample;
+import de.tudresden.parsers.PropertyJsonParser;
+
 public class Sandbox {
+	
+	public static void testParser(){
+		final String INPUT_FILE_PATH = "/home/rodrigo.lins/personal/git/master_arduino/assets/real_data.sample";
+		File file = new File(INPUT_FILE_PATH);
+		Gson gson = new Gson();
+		try {
+			BufferedReader input = new BufferedReader(new FileReader(file));
+			try {
+				String line = null;
+				while((line = input.readLine()) != null){
+					Sample sample = PropertyJsonParser.parseLine(line);
+					System.out.println("Print sample: " + sample);
+					System.out.println("Print line: " + line);
+				}
+			} finally {
+				input.close();
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found!");
+		} catch (IOException e) {
+			System.out.println("There was a problem reading the file.");
+		}
+	}
+	
+	public static void testGson(){
+		Property prop1 = new Property();
+		prop1.setName("distance");
+		prop1.setValue(12.00);
+		prop1.setUnit("cm");
+		Sample sample1 = new Sample();
+		sample1.setId(6);
+		sample1.setType("temperature");
+		sample1.setModel("HC-SR04");
+		List<Property> properties = new ArrayList<Property>();
+		properties.add(prop1);
+		sample1.setProperties(properties);
+		
+		Gson gson = new Gson();
+		System.out.println(gson.toJson(sample1));
+	}
 
 	public static void main(String[] args) {
-		final String TEST = "{\"type\":\"temperature\",\"model\":\"LM35\",\"temperature\":22.95,\"unit\":\"celcilus\"}" +
-//			"Doing something" +
-			"{\"type\":\"push_button\",\"model\":\"generic\",\"state\":\"off\"}" +
-//			"Doing something" +
-			"{\"type\":\"hygrometer\",\"model\":\"DHT22\",\"humidity\":55.60,\"humidityUnit\":\"%\",\"temperature\":23.50,\"temperatureUnit\":\"celcius\",\"heatIndex\":25.12,\"heatIndexUnit\":\"celcius\"}" +
-//			"Doing something" +
-			"{\"type\":\"triaxial_accelerometer\",\"model\":\"MMA7361\",\"xAxis\":-4.67,\"xAxisUnit\":\"g\",\"yAxis\":-5.00,\"yAxisUnit\":\"g\",\"zAxis\":-5.00,\"zAxisUnit\":\"g\"}" +
-//			"Doing something" +
-			"{\"type\":\"motion\",\"model\":\"RE200B\",\"motion\":\"false\"}" +
-//			"Doing something" +
-			"{\"type\":\"ultrasonic\",\"model\":\"HC-SR04\",\"distance\":6,\"unit\":\"cm\"}";
-//			"Doing something" +
-//			"echo: echo echo!echo echo!echo echo!echo echo!echo echo!e";
-		final String TEST2 = "{\"id\":5,\"type\":\"motion\",\"model\":\"RE200B\",\"properties\":{\"state\":{\"value\":\"true\",\"unit\":\"binary\"}}}";
-		Gson gson = new Gson();
-//		gson.fromJson(TEST2, classOfT)
-		
-
+		testParser();
+//		testGson();
 	}
 }

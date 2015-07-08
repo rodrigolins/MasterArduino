@@ -16,7 +16,7 @@ public class TwoWaySerialComm {
 	private final static int DATA_RATE = 9600;
 	
 	void connect(String portName) throws Exception {
-		System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM1");
+		System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
 		
 		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
 		if (portIdentifier.isCurrentlyOwned()) {
@@ -98,7 +98,7 @@ public class TwoWaySerialComm {
 	public static void main(String[] args) {
 		try {
 			TwoWaySerialComm serial = new TwoWaySerialComm();
-			serial.connect("/dev/ttyACM1");
+			serial.connect("/dev/ttyACM0");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
